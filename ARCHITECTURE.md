@@ -22,7 +22,7 @@ The `CrawlState` object is the central data structure that flows through all age
 
 ### 2. Agent Architecture
 
-The system uses three specialized agents:
+The system uses four specialized agents:
 
 #### Page Fetching Agent (Code-based)
 ```
@@ -67,6 +67,20 @@ Features:
 ```
 
 **Implementation**: `src/agents/product_extraction.py`
+
+#### Page Relevance Agent (Code-based)
+```
+Responsibility: Heuristic-based relevance detection
+Input: HTML content
+Output: `is_relevant` flag on `CrawlState`
+Features:
+- Detects `schema.org` `Product`/`Offer` JSON-LD
+- Finds currency/price patterns and product CTAs ("add to cart", "buy now")
+- Basic image + price density checks
+- Marks page as not relevant to skip discovery and extraction
+```
+
+**Implementation**: `src/agents/page_relevance.py`
 
 ### 3. Data Models
 
@@ -116,6 +130,15 @@ The workflow implements a sequential processing pattern with conditional looping
 │    queue            │
 │  - Fetch HTML      │
 │  - Handle errors   │
+└────────┬────────────┘
+         │
+         ▼
+┌─────────────────────┐
+│  RELEVANCE CHECK    │  (Page Relevance Agent)
+│  - Detect Product   │
+│    signals (JSON-LD,
+│    price, CTAs)     │
+│  - Set `is_relevant` flag
 └────────┬────────────┘
          │
          ▼

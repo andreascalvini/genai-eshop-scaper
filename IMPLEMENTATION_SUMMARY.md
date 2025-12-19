@@ -11,7 +11,8 @@ A complete multi-agent LLM-based web scraping application for fashion ecommerce 
 - **3 specialized agents**:
   - Page Fetching Agent (code-based) - HTTP requests with retry logic
   - Page Discovery Agent (code-based) - URL extraction and filtering
-  - Product Extraction Agent (LLM-based) - Intelligent product data extraction
+   - Product Extraction Agent (LLM-based) - Intelligent product data extraction
+   - Page Relevance Agent (code-based) - Heuristic filter that skips non-product pages before discovery/extraction
 - **State management** via CrawlState (Pydantic model)
 - **Modular design** - Easy to extend and customize
 
@@ -115,6 +116,12 @@ Fetch Page → Discover Pages → Extract Products → Loop or End
 - Fetches HTML from URL
 - Implements retry logic with exponential backoff
 - Handles timeouts and errors gracefully
+
+**Step 1.5 - Page Relevance Agent (new)**
+- Runs immediately after a page is fetched.
+- Uses lightweight heuristics (JSON-LD Product detection, currency/price patterns, CTAs like "add to cart", image+price density) to mark pages as relevant or not.
+- If a page is marked not relevant, discovery and extraction are skipped for that URL to save processing and LLM calls.
+
 
 **Step 2 - Page Discovery Agent**
 - Extracts all links from HTML

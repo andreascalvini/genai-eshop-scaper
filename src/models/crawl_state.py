@@ -26,6 +26,8 @@ class CrawlState(BaseModel):
     page_html: str = ""
     error_message: str = ""
     status: str = "initialized"
+    # Relevance flag - whether the page likely contains products
+    is_relevant: bool = True
 
     # Statistics
     total_pages_crawled: int = 0

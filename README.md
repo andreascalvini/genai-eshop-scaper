@@ -200,6 +200,18 @@ The application generates:
   - Structured output parsing
   - Error handling and validation
 
+### Page Relevance Agent (new)
+- **Type**: Code-based (heuristic)
+- **Responsibility**: Quickly decide whether a fetched page likely contains products and should be processed further.
+- **Where it runs**: After the `Page Fetching Agent` and before `Page Discovery`/`Product Extraction`.
+- **Heuristics used**:
+  - Detect `schema.org` `Product`/`Offer` JSON-LD blocks
+  - Look for currency/price patterns (€, $, £) and price-related keywords
+  - Detect CTAs like "add to cart", "buy now", or size/sku keywords
+  - Basic image + price density checks
+- **Why**: Skipping non-product pages (home, contact, terms) saves LLM calls and speeds up crawls.
+- **Tuning**: Adjust keywords and thresholds in `src/agents/page_relevance.py` to be more/less strict.
+
 ## Advanced Configuration
 
 ### Using Different LLMs

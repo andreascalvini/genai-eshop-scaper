@@ -7,6 +7,7 @@ from src.agents import (
     PageDiscoveryAgent,
     ProductExtractionAgent,
 )
+from src.agents import PageRelevanceAgent
 from src.config import settings
 from typing import Literal
 
@@ -28,6 +29,7 @@ def create_crawl_graph() -> StateGraph:
     page_fetcher = PageFetchingAgent()
     page_discoverer = PageDiscoveryAgent()
     product_extractor = ProductExtractionAgent()
+    page_relevance = PageRelevanceAgent()
 
     # Create graph
     graph = StateGraph(CrawlState)
@@ -36,6 +38,10 @@ def create_crawl_graph() -> StateGraph:
     def fetch_node(state: CrawlState) -> CrawlState:
         """Fetch a page from the queue."""
         return page_fetcher.run(state)
+
+    def relevance_node(state: CrawlState) -> CrawlState:
+        """Decide whether the current page is relevant (contains products)."""
+        return page_relevance.run(state)
 
     def discover_node(state: CrawlState) -> CrawlState:
         """Discover new pages from the current page."""
@@ -53,11 +59,18 @@ def create_crawl_graph() -> StateGraph:
 
     # Add nodes
     graph.add_node("fetch", fetch_node)
+    graph.add_node("relevance", relevance_node)
     graph.add_node("discover", discover_node)
     graph.add_node("extract", extract_node)
 
     # Add edges
-    graph.add_edge("fetch", "discover")
+    graph.add_edge("fetch", "relevance")
+    # If relevant -> discover, else skip discovery/extraction and fetch next
+    graph.add_conditional_edges(
+        "relevance",
+        lambda s: "discover" if getattr(s, "is_relevant", True) else "fetch",
+        {"discover": "discover", "fetch": "fetch"},
+    )
     graph.add_edge("discover", "extract")
     graph.add_conditional_edges(
         "extract",
